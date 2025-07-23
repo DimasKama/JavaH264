@@ -263,7 +263,7 @@ jobs:
           echo "jar_paths=$JAR_FILES" >> $GITHUB_OUTPUT
 
       - name: Upload all JARs to Release Assets
-        if: success() && steps.find_all_jars.outputs.jar_paths != ''
+        if: steps.find_all_jars.outputs.jar_paths != ''
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.find_all_jars.outputs.jar_paths }}
