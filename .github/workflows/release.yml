@@ -32,6 +32,10 @@ jobs:
     defaults:
       run:
         working-directory: ./rust
+    env:
+      CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER: i686-linux-gnu-gcc
+      CC: i686-linux-gnu-gcc
+      CXX: i686-linux-gnu-g++
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
