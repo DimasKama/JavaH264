@@ -1,0 +1,19 @@
+[package]
+name = "javah264"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+jni = "0.21.1"
+openh264 = "0.8.1"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+panic = "abort"
+strip = "symbols"
+debug = false
