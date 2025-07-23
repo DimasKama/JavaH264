@@ -35,17 +35,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Update
-        run: sudo apt-get update -y
-      - name: Install libc6-dev-i386
-        run: sudo apt-get install -y libc6-dev-i386
-      - name: Install gcc and g++ for i686
-        run: sudo apt-get install -y gcc-i686-linux-gnu g++-i686-linux-gnu
-      - name: Cargo build
-        run: |
-          cargo install cargo-xbuild
-          rustup target add i686-unknown-linux-gnu
-          cargo build --target=i686-unknown-linux-gnu --release --lib
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          target: x86_64-unknown-linux-gnu
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
       - uses: actions/upload-artifact@v4
         with:
           name: javah264-linux-x86
@@ -120,7 +129,7 @@ jobs:
           path: ./rust/target/aarch64-apple-darwin/release/libjavah264.dylib
 
   build-windows-x86-64:
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         working-directory: ./rust
@@ -136,7 +145,7 @@ jobs:
           path: ./rust/target/release/javah264.dll
 
   build-windows-x86:
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         working-directory: ./rust
@@ -163,7 +172,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '8'
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Download linux-x86-64
