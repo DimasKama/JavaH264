@@ -252,20 +252,9 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: ./gradlew publish
 
-      - name: Get all JAR file paths for upload
-        id: get_jar_paths
-        run: |
-          JAR_FILES=$(find build/libs -name "*.jar" -print0 | xargs -0)
-          if [ -z "$JAR_FILES" ]; then
-            echo "Error: No JAR files found in build/libs."
-            exit 1
-          fi
-          echo "jar_paths=$JAR_FILES" >> $GITHUB_OUTPUT
-
       - name: Upload all JARs to Release Assets
-        if: steps.find_all_jars.outputs.jar_paths != ''
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ steps.find_all_jars.outputs.jar_paths }}
+          files: ./build/libs/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
