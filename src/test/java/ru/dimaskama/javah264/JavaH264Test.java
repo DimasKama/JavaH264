@@ -15,23 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JavaH264Test {
 
     @Test
-    @DisplayName("Decode")
-    void decode() throws IOException, UnknownPlatformException {
-        byte[] h264data;
-        try (InputStream in = JavaH264Test.class.getClassLoader().getResourceAsStream("multi_512x512.h264")) {
-            h264data = readAllBytes(Objects.requireNonNull(in));
-        }
-        boolean atLeastOneFrameDecoded = false;
-        try (H264Decoder decoder = new H264Decoder()) {
-            for (byte[] nalUnit : H264Decoder.nalUnits(h264data)) {
-                atLeastOneFrameDecoded |= decoder.decodeRGBA(nalUnit) != null;
-            }
-            atLeastOneFrameDecoded |= decoder.flushRemainingRGBA().length != 0;
-        }
-        assertTrue(atLeastOneFrameDecoded);
-    }
-
-    @Test
     @DisplayName("Decode and encode")
     void decodeAndEncode() throws IOException, UnknownPlatformException, EncoderException {
         byte[] h264data;
@@ -47,6 +30,28 @@ public class JavaH264Test {
                     encoder.encodeRGBA(decodeResult.getWidth(), decodeResult.getWidth(), decodeResult.getImage());
                 }
             }
+            atLeastOneFrameDecoded |= decoder.flushRemainingRGBA().length != 0;
+        }
+        assertTrue(atLeastOneFrameDecoded);
+    }
+
+    @Test
+    @DisplayName("Decode and encodeSeparate")
+    void decodeAndEncodeSeparate() throws IOException, UnknownPlatformException, EncoderException {
+        byte[] h264data;
+        try (InputStream in = JavaH264Test.class.getClassLoader().getResourceAsStream("multi_512x512.h264")) {
+            h264data = readAllBytes(Objects.requireNonNull(in));
+        }
+        boolean atLeastOneFrameDecoded = false;
+        try (H264Decoder decoder = new H264Decoder(); H264Encoder encoder = new H264Encoder()) {
+            for (byte[] nalUnit : H264Decoder.nalUnits(h264data)) {
+                DecodeResult decodeResult = decoder.decodeRGBA(nalUnit);
+                if (decodeResult != null) {
+                    atLeastOneFrameDecoded = true;
+                    encoder.encodeSeparateRGBA(decodeResult.getWidth(), decodeResult.getWidth(), decodeResult.getImage());
+                }
+            }
+            atLeastOneFrameDecoded |= decoder.flushRemainingRGBA().length != 0;
         }
         assertTrue(atLeastOneFrameDecoded);
     }

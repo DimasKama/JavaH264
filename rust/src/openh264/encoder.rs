@@ -150,7 +150,7 @@ pub extern "C" fn Java_ru_dimaskama_javah264_H264Encoder_encodeRGBA0<'a>(
     width: jint,
     height: jint,
     rgba: JByteArray<'a>
-) -> JObjectArray<'a> {
+) -> JByteArray<'a> {
     encode_and_construct(&mut env, ptr, width, height, rgba, |data, dims| {
         YUVBuffer::from_rgb_source(RgbaSliceU8::new(data, dims))
     })
@@ -164,13 +164,70 @@ pub extern "C" fn Java_ru_dimaskama_javah264_H264Encoder_encodeRGB0<'a>(
     width: jint,
     height: jint,
     rgb: JByteArray<'a>
-) -> JObjectArray<'a> {
+) -> JByteArray<'a> {
     encode_and_construct(&mut env, ptr, width, height, rgb, |data, dims| {
         YUVBuffer::from_rgb_source(RgbSliceU8::new(data, dims))
     })
 }
 
 fn encode_and_construct<'a>(
+    env: &mut JNIEnv<'a>,
+    ptr: jlong,
+    width: jint,
+    height: jint,
+    data: JByteArray<'a>,
+    yuv_source_fn: fn(&[u8], (usize, usize)) -> YUVBuffer
+) -> JByteArray<'a> {
+    let encoder = unsafe { &mut *(ptr as *mut Encoder) };
+    let bytes = match env.convert_byte_array(data) {
+        Ok(b) => b,
+        Err(err) => {
+            throw_runtime_exception(env, format!("Failed to convert java array: {}", err));
+            return JByteArray::default();
+        }
+    };
+    let yuv_source = yuv_source_fn(&bytes, (width as usize, height as usize));
+    match encoder.encode(&yuv_source) {
+        Ok(bitstream) => {
+            let vec = bitstream.to_vec();
+            env.byte_array_from_slice(&vec).unwrap()
+        }
+        Err(err) => {
+            throw_encoder_exception(env, format!("Failed to encode: {}", err));
+            JByteArray::default()
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Java_ru_dimaskama_javah264_H264Encoder_encodeSeparateRGBA0<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass<'a>,
+    ptr: jlong,
+    width: jint,
+    height: jint,
+    rgba: JByteArray<'a>
+) -> JObjectArray<'a> {
+    encode_and_construct_separate(&mut env, ptr, width, height, rgba, |data, dims| {
+        YUVBuffer::from_rgb_source(RgbaSliceU8::new(data, dims))
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Java_ru_dimaskama_javah264_H264Encoder_encodeSeparateRGB0<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass<'a>,
+    ptr: jlong,
+    width: jint,
+    height: jint,
+    rgb: JByteArray<'a>
+) -> JObjectArray<'a> {
+    encode_and_construct_separate(&mut env, ptr, width, height, rgb, |data, dims| {
+        YUVBuffer::from_rgb_source(RgbSliceU8::new(data, dims))
+    })
+}
+
+fn encode_and_construct_separate<'a>(
     env: &mut JNIEnv<'a>,
     ptr: jlong,
     width: jint,

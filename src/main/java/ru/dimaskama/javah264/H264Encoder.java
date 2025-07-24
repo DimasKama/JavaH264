@@ -44,16 +44,28 @@ public class H264Encoder implements AutoCloseable {
         return new Builder();
     }
 
-    public byte[][] encodeRGBA(int width, int height, byte[] rgba) throws EncoderException {
+    public byte[] encodeRGBA(int width, int height, byte[] rgba) throws EncoderException {
         assertNotClosed();
         checkDims(width, height, 4, rgba.length);
         return encodeRGBA0(pointer, width, height, rgba);
     }
 
-    public byte[][] encodeRGB(int width, int height, byte[] rgb) throws EncoderException {
+    public byte[] encodeRGB(int width, int height, byte[] rgb) throws EncoderException {
         assertNotClosed();
         checkDims(width, height, 3, rgb.length);
         return encodeRGB0(pointer, width, height, rgb);
+    }
+
+    public byte[][] encodeSeparateRGBA(int width, int height, byte[] rgba) throws EncoderException {
+        assertNotClosed();
+        checkDims(width, height, 4, rgba.length);
+        return encodeSeparateRGBA0(pointer, width, height, rgba);
+    }
+
+    public byte[][] encodeSeparateRGB(int width, int height, byte[] rgb) throws EncoderException {
+        assertNotClosed();
+        checkDims(width, height, 3, rgb.length);
+        return encodeSeparateRGB0(pointer, width, height, rgb);
     }
 
     private void checkDims(int width, int height, int pixelLen, int dataLength) {
@@ -108,9 +120,13 @@ public class H264Encoder implements AutoCloseable {
             int intraFramePeriod
     );
 
-    private static native byte[][] encodeRGBA0(long pointer, int width, int height, byte[] rgba) throws EncoderException;
+    private static native byte[] encodeRGBA0(long pointer, int width, int height, byte[] rgba) throws EncoderException;
 
-    private static native byte[][] encodeRGB0(long pointer, int width, int height, byte[] rgb) throws EncoderException;
+    private static native byte[] encodeRGB0(long pointer, int width, int height, byte[] rgb) throws EncoderException;
+
+    private static native byte[][] encodeSeparateRGBA0(long pointer, int width, int height, byte[] rgba) throws EncoderException;
+
+    private static native byte[][] encodeSeparateRGB0(long pointer, int width, int height, byte[] rgb) throws EncoderException;
 
     private static native void destroyEncoder0(long pointer);
 
